@@ -1,0 +1,24 @@
+# Derleme ve Çıktı Klasörleri (Maven)
+target/
+*.class
+
+# Log dosyaları
+*.log
+
+# IDE ve Editör Ayarları
+.idea/
+.vscode/
+*.iml
+*.iws
+*.ipr
+.project
+.classpath
+.settings/
+
+# İşletim Sistemi Geçici Dosyaları
+.DS_Store
+Thumbs.db
+
+# Ortam değişkenleri ve gizli dosyalar
+.env
+application-local.properties
