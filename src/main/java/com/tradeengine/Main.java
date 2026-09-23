@@ -1,12 +1,17 @@
 package com.tradeengine;
 
 import java.math.BigDecimal;
+import java.util.List;
 import com.tradeengine.model.Order;
 import com.tradeengine.model.Crypto;
 import com.tradeengine.model.Money;
 import com.tradeengine.model.Stock;
 import com.tradeengine.model.enums.Currency;
 import com.tradeengine.model.enums.OrderSide;
+import com.tradeengine.strategy.FeeStrategy;
+import com.tradeengine.strategy.FixedFeeStrategy;
+import com.tradeengine.strategy.PercentageFeeStrategy;
+import com.tradeengine.strategy.ZeroFeeStrategy;
 
 public class Main {
     public static void main(String[] args) {
@@ -86,6 +91,24 @@ public class Main {
             myOrder.cancel();
         } catch (IllegalStateException e) {
             System.out.println("Security Triggered: " + e.getMessage());
+        }
+
+        // -----------------------------------------------------------------
+        System.out.println("\n Strategy Pattern Fee Test");
+
+        Money tradeTotal = Money.of(10_100.00, Currency.USD);
+        System.out.println("Trade Total Amount: " + tradeTotal + "\n");
+
+        List<FeeStrategy> strategies = List.of(
+                new PercentageFeeStrategy(0.002),
+                new PercentageFeeStrategy(0.0005),
+                new PercentageFeeStrategy(0.0001, Money.of(5.00, Currency.USD)),
+                new FixedFeeStrategy(Money.of(2.50, Currency.USD)),
+                new ZeroFeeStrategy());
+
+        for (FeeStrategy strategy : strategies) {
+            Money fee = strategy.calculateFee(tradeTotal);
+            System.out.println("Strategy: " + strategy.getStrategyName() + "-> Calculated Fee: " + fee);
         }
     }
 }
