@@ -12,6 +12,9 @@ import com.tradeengine.strategy.FeeStrategy;
 import com.tradeengine.strategy.FixedFeeStrategy;
 import com.tradeengine.strategy.PercentageFeeStrategy;
 import com.tradeengine.strategy.ZeroFeeStrategy;
+import com.tradeengine.engine.MatchingEngine;
+import com.tradeengine.engine.OrderBook;
+import com.tradeengine.model.Trade;
 
 public class Main {
     public static void main(String[] args) {
@@ -110,5 +113,47 @@ public class Main {
             Money fee = strategy.calculateFee(tradeTotal);
             System.out.println("Strategy: " + strategy.getStrategyName() + "-> Calculated Fee: " + fee);
         }
+
+        // ------------------------------------------------------------------
+        // matching engine & order book test
+        FeeStrategy feeStrategy = new PercentageFeeStrategy(0.001);
+        System.out.println("\n live stock exchange simulation (aapl)");
+
+        OrderBook appleBook = new OrderBook(apple);
+        MatchingEngine engine = new MatchingEngine(feeStrategy);
+
+        Order bobSell = new Order(apple, OrderSide.SELL, new BigDecimal("50"), Money.of(150.00, Currency.USD));
+
+        Order charlieSell = new Order(apple, OrderSide.SELL, new BigDecimal("30"), Money.of(148.00, Currency.USD));
+
+        appleBook.addOrder(bobSell);
+        appleBook.addOrder(charlieSell);
+
+        System.out.println("2 Sell Order Added To The Board");
+        System.out.println("Bob: " + bobSell);
+        System.out.println("Charlie" + charlieSell);
+        System.out.println("Best Seller On The Board (Cheapest Price: " + appleBook.peekBestSell());
+
+        System.out.println("\nAlice is in: 70 share @ 152.00$");
+        Order aliceBuy = new Order(apple, OrderSide.BUY, new BigDecimal("70"), Money.of(152.00, Currency.USD));
+        appleBook.addOrder(aliceBuy);
+
+        // motoru çalıştıruyoruz artık
+        System.out.println("Maching engine processing");
+        List<Trade> trades = engine.process(appleBook);
+
+        System.out.println("Trades count: " + trades.size());
+        for (Trade trade : trades) {
+            System.out.println("TRADE: " + trade.quantity() + trade.asset().getSymbol()
+                    + " @ " + trade.price()
+                    + " | Buyer Fee: " + trade.buyerFee()
+                    + " | Seller Fee: " + trade.sellerFee()
+                    + " | Time: " + trade.executedAt());
+        }
+
+        System.out.println("\nState Of The Board After Session");
+        System.out.println("Remaining Buy Order Count: " + appleBook.getBuyOrderCount());
+        System.out.println("Remaining Sell Order Count: " + appleBook.getSellOrderCount());
+        System.out.println("Remaining Seller On The Board(Bob)" + appleBook.peekBestSell());
     }
 }
